@@ -1,0 +1,30 @@
+#ex1
+n = int(input())
+a = [i**2 for i in range(n+1)]
+print(a)
+
+#ex2
+n = int(input())
+a = [i for i in range(n+1)]
+b = [i for i in a if i % 2 == 0]
+print(b)
+
+#ex3
+def div():
+    n = int(input())
+    a = [i for i in range(n+1)]
+    b = [i for i in a if i % 3 == 0 and i % 4 == 0]
+    print(b)
+
+div()
+
+#ex4
+a = int(input())
+b = int(input())
+squares = [i**2 for i in range(a, b)]
+print(squares)
+
+#ex5
+n = int(input())
+a = [i for i in range(n, -1, -1)]
+print(a)
