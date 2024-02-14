@@ -19,10 +19,12 @@ def div():
 div()
 
 #ex4
+def squares(i):
+    yield i**2
 a = int(input())
 b = int(input())
-squares = [i**2 for i in range(a, b)]
-print(squares)
+for i in range(a, b):
+    print(next(squares(i)))
 
 #ex5
 n = int(input())
