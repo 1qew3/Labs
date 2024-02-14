@@ -1,0 +1,13 @@
+#ex1
+import datetime
+date_time = datetime.date.today() - datetime.timedelta(days=5)
+print(date_time)
+
+#ex2
+import datetime
+yersterdey = datetime.date.today() - datetime.timedelta(days=1)
+today = datetime.date.today() 
+tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+print(yersterdey, today, tomorrow)
+
+#ex3
