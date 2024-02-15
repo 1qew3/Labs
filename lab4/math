@@ -1,0 +1,6 @@
+#ex1
+import math
+degree = int(input())
+print(degree * (math.pi / 180))
+
+#ex2
