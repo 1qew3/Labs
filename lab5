@@ -1,1 +1,11 @@
 #ex1
+import re
+x = input()
+print(re.findall('ab*', x))
+#ex2
+print(re.findall("ab{2,3}]", x))
+#ex3
+print(re.findall("[a-z_]+", x))
+#ex4
+print(re.findall("[A-Z]i[a-z]+", x))
+#ex5
