@@ -9,3 +9,21 @@ print(re.findall("[a-z_]+", x))
 #ex4
 print(re.findall("[A-Z]i[a-z]+", x))
 #ex5
+print(re.findall(r'a[a-zA-Z]*b', x))
+#ex6
+print(re.sub("[\s,.]", "_", x))
+#ex7
+y = re.sub(r'(?<=_)([a-z])', lambda match: match.group(1).upper(), x)
+d = '_'
+print(y.replace(d, ''))
+#ex8
+print(re.split('[A-Z]', x))
+#ex9
+print(re.sub(r'(?<!\s)(?=[A-Z])', ' ', x))
+#ex10
+import re
+x = input()
+d = '_'
+e = re.sub(r'([A-Z])', fr'{d}\1', x)
+print(re.sub(r'[A-Z]', lambda match: match.group(0).lower(), e))
+
