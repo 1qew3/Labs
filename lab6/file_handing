@@ -1,0 +1,29 @@
+#ex1
+import os 
+x = input()
+print(os.listdir(x))
+for i in os.listdir(x):
+    if os.path.isdir(x):
+        print(i)
+for j in os.listdir(x):
+    if os.path.isfile(x):
+        print(i)
+#ex2
+import os 
+x = input()
+if os.path.exist(x):
+    print('yes')
+if os.acces(x, os.R_OK):
+    print('yes')
+if os.acces(x, os.W_OK):
+    print('yes')
+if os.acces(x, os.X_OK):
+    print('yes')
+#ex3
+import os 
+x = input()
+if os.path.exist(x):
+    name = os.path.basename(x)
+    name2 = os.path.dirname(x)
+print(name, name2)
+#ex4
