@@ -38,6 +38,7 @@ enemies.add(Enemy())
 speed = 5 
 done = False
 score = 0
+shag = 0
 coin = pygame.sprite.Group()
 coin.add(Coin())
 font = pygame.font.Font(None, 36)
@@ -70,10 +71,12 @@ while not done:
             chance = [1, 1, 1, 1, 1, 2, 2, 2, 3, 3]
             weight = random.choices(chance)[0]
             score += weight
+            shag += weight
             co.rect.x = random.randint(0, 370)
             co.rect.y = 100
-            if score % 5 == 0 and score > 1 and speed <= 20:
-                speed += 5
+            if shag >= 5 and speed <= 20:
+                speed += 3
+                shag = 0
         elif co.rect.y > 700:
             co.rect.x = random.randint(0, 370)
             co.rect.y = 100
