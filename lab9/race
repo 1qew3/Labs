@@ -67,7 +67,9 @@ while not done:
         collected_coins = pygame.sprite.spritecollide(player, coin, False)
         if collected_coins:
             print("collected a coin!")
-            score += 1
+            chance = [1, 1, 1, 1, 1, 2, 2, 2, 3, 3]
+            weight = random.choices(chance)[0]
+            score += weight
             co.rect.x = random.randint(0, 370)
             co.rect.y = 100
             if score % 5 == 0 and score > 1 and speed <= 20:
