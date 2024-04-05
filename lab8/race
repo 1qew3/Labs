@@ -1,0 +1,102 @@
+import random
+import pygame 
+import datetime
+pygame.init()
+
+screen = pygame.display.set_mode((420, 700))
+clock = pygame.time.Clock()
+speed_ch = pygame.USEREVENT+1
+background = pygame.image.load("road.png").convert()
+pygame.time.set_timer(speed_ch, 5000)
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("car1.png")  # Загрузка изображения игрока
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 600
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("car2.png")  # Загрузка изображения врага
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, 360)
+        self.rect.y = 100
+
+class Coin(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image =  pygame.image.load("coin.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0,370)
+        self.rect.y = 100
+
+player = Player()
+enemies = pygame.sprite.Group()
+enemies.add(Enemy())
+speed = 5 
+done = False
+score = 0
+coin = pygame.sprite.Group()
+coin.add(Coin())
+font = pygame.font.Font(None, 36)
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        if event.type == speed_ch and speed <= 20:
+            speed += 5
+    
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_DOWN] and player.rect.y < 600:
+        player.rect.y += 10
+    if keys[pygame.K_UP] and player.rect.y > 100:
+        player.rect.y -= 10
+    if keys[pygame.K_RIGHT] and player.rect.x <360:
+        player.rect.x += 10
+    if keys[pygame.K_LEFT] and player.rect.x > 0:
+        player.rect.x -= 10
+    for enemy in enemies:
+        if enemy.rect.y > 700:
+            enemy.rect.y = 100
+            enemy.rect.x = random.randint(0, 360)
+        enemy.rect.y += speed
+
+    screen.fill((255, 255, 255))
+    
+    for co in coin:
+        collected_coins = pygame.sprite.spritecollide(player, coin, False)
+        if collected_coins:
+            print("collected a coin!")
+            score += 1
+            co.rect.x = random.randint(0, 370)
+            co.rect.y = 100
+        elif co.rect.y > 700:
+            co.rect.x = random.randint(0, 370)
+            co.rect.y = 100
+        co.rect.y += 7
+
+
+    # Проверка столкновений игрока с врагами
+    if pygame.sprite.spritecollide(player, enemies, False):
+        print("Столкновение!")
+        done = True
+    
+    screen.blit(player.image, player.rect)
+
+    enemies.draw(screen)
+    enemies.update()
+
+    coin.draw(screen)
+    coin.update()
+
+    text_surface = font.render("Score:", True, (0, 0, 0))
+    screen.blit(text_surface, (50, 50))
+    pygame.display.flip()
+    text_score = font.render(''.join(str(score)), True, (0, 0, 0))
+    screen.blit(text_score, (150, 50))
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
