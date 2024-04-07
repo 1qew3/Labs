@@ -1,0 +1,37 @@
+import pygame
+import random
+pygame.init()
+
+screen = pygame.display.set_mode((420, 700))
+clock = pygame.time.Clock()
+
+class Circle():
+    def __init__(self):
+        super().__init__()
+        self.circle = pygame.Rect(0, 0, 20, 20)
+        self.circle.x = random.randint(0, 400)
+        self.circle.y = random.randint(0, 680)
+
+done = False
+circle = Circle()
+
+
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_DOWN] and circle.circle.y < 680:
+            circle.circle.y += 20
+        if keys[pygame.K_UP] and circle.circle.y > 0:
+            circle.circle.y -= 20
+        if keys[pygame.K_RIGHT] and circle.circle.x <400:
+            circle.circle.x += 20
+        if keys[pygame.K_LEFT] and circle.circle.x > 0:
+            circle.circle.x -= 20
+    screen.fill((0, 0, 0))
+    pygame.draw.circle(screen, (0, 255, 0),(circle.circle.x, circle.circle.y), 20)
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
