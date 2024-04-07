@@ -1,0 +1,50 @@
+import pygame
+import math
+
+pygame.init()
+
+screen = pygame.display.set_mode((500, 500))
+clock = pygame.time.Clock()
+
+def draw_circle(xs, ys, xd, yd):
+    r = int(math.sqrt((xd - xs) ** 2 + (yd - ys) ** 2) / 2)
+    pygame.draw.circle(screen, (255, 0, 0), (xs, ys), r)
+
+def draw_rect(xs, ys, xd, yd):
+    pygame.draw.rect(screen, (255, 0, 0), [xs, ys, xd, yd])
+
+def eraser():
+    screen.fill((0, 0, 0))
+
+done = False
+
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                x, y = event.pos
+                print('start: ', x, y)
+            if event.button == 3:
+                x3, y3 = event.pos
+                print('start: ', x3, y3)
+        if event.type == pygame.MOUSEMOTION:
+            if pygame.mouse.get_pressed()[0]:
+                x1, y1 = event.pos
+                draw_circle(x, y, x1, y1)
+                print(x, y, x1, y1)
+            if pygame.mouse.get_pressed()[2]:  # Проверяем правую кнопку мыши (кнопка 2)
+                x2, y2 = event.pos
+                draw_rect(x3, y3, x2 - x3, y2 - y3)  # Вычисляем ширину и высоту прямоугольника
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                a, b = event.pos
+                print('stop: ', a, b)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e:
+                eraser()
+    pygame.display.update()
+    clock.tick(240)
+
+pygame.quit()
