@@ -1,0 +1,146 @@
+import pygame
+import time
+import random
+ 
+pygame.init()
+
+screen = pygame.display.set_mode((600, 700))
+pygame.display.set_caption('Snake Game')
+dead_time = pygame.USEREVENT+1
+pygame.time.set_timer(dead_time, 5000)
+clock = pygame.time.Clock()
+food_collected_event = pygame.USEREVENT + 2
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("q.png")  # Загрузка изображения игрока
+        self.rect = self.image.get_rect()
+        self.rect.x = 300
+        self.rect.y = 300
+class Food(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("food.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0,590)
+        self.rect.y = random.randint(0, 690)
+
+def our_snake(snake_list):
+    for x in snake_list:
+        pygame.draw.rect(screen, (0, 0, 0), [x[0], x[1], 10, 10])
+
+def food_time():
+    food = Food()
+    food.rect.x = random.randint(60, 590)
+    food.rect.y = random.randint(0, 690)
+    screen.blit(food.image, food.rect)
+    food.update()
+
+score = 0
+speed = 5
+level = 1
+shag = 0
+snake = Player()
+food = pygame.sprite.Group()
+food.add(Food())
+
+done = False
+
+font = pygame.font.Font(None, 36)
+
+move_left = False
+move_right = False
+move_up = False
+move_down = False
+
+snake_List = []
+Length_of_snake = 1
+
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        if event.type == food_collected_event:
+            pygame.time.set_timer(dead_time, 5000)
+        if event.type == dead_time:
+            food_time()
+            food = pygame.sprite.Group()
+            food.add(Food())
+    if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                move_left = True
+                move_right = False
+                move_up = False
+                move_down = False
+            if event.key == pygame.K_RIGHT:
+                move_right = True
+                move_up = False
+                move_down = False
+                move_left = False
+            if event.key == pygame.K_UP:
+                move_up = True
+                move_left = False
+                move_right = False
+                move_down = False
+            if event.key == pygame.K_DOWN:
+                move_down = True
+                move_left = False
+                move_right = False
+                move_up = False 
+    if move_left:
+        snake.rect.x -= speed
+    if move_right:
+        snake.rect.x += speed
+    if move_up:
+        snake.rect.y -= speed
+    if move_down:
+        snake.rect.y += speed
+
+    if snake.rect.x >= 600 or snake.rect.x < 0 or snake.rect.y >= 700 or snake.rect.y < 53:
+        done = True
+
+    snake_Head = []
+    snake_Head.append(snake.rect.x)
+    snake_Head.append(snake.rect.y)
+    snake_List.append(snake_Head)
+    if len(snake_List) > Length_of_snake:
+        del snake_List[0]
+    
+    pygame.draw.rect(screen, (0, 0, 0), [0, 53, 700, 5])
+    pygame.display.update()
+    screen.fill((255, 255, 255))
+    for co in food:
+        collected_coins = pygame.sprite.spritecollide(snake, food, False)
+        if collected_coins:
+            chance = [1, 1, 1, 1, 1, 2, 2, 2, 3, 3]
+            weight = random.choices(chance)[0]
+            score += weight
+            shag += weight
+            pygame.event.post(pygame.event.Event(food_collected_event))
+            co.rect.x = random.randint(60, 590)
+            co.rect.y = random.randint(0, 690)
+            if shag >= 4:
+                speed += 5
+                level += 1
+                shag = 0
+                print(score)
+            Length_of_snake += weight
+    for x in snake_List[:-1]:
+        if x == snake_Head:
+            done = True
+    screen.blit(snake.image, snake.rect)
+    food.draw(screen)
+    food.update()
+    clock.tick(30)
+    our_snake(snake_List)
+    text_surface = font.render("Score:", True, (0, 0, 0))
+    screen.blit(text_surface, (5, 5))
+    text_surface1 = font.render("Level:", True, (0, 0, 0))
+    screen.blit(text_surface1, (5, 30))
+    pygame.display.flip()
+    text_score = font.render(''.join(str(score)), True, (0, 0, 0))
+    screen.blit(text_score, (100, 5))
+    text_level = font.render(''.join(str(level)), True, (0, 0, 0))
+    screen.blit(text_level, (80, 30))
+    pygame.display.flip()
+pygame.quit()
