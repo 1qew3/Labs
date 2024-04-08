@@ -5,7 +5,7 @@ pygame.init()
 
 screen = pygame.display.set_mode((400, 300))
 
-music_dir = r""
+music_dir = os.path.join(os.path.dirname(__file__), "musiclist")
 
 
 
