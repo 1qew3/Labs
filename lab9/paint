@@ -1,0 +1,79 @@
+import pygame
+import math
+
+pygame.init()
+
+screen = pygame.display.set_mode((500, 500))
+clock = pygame.time.Clock()
+
+def draw_circle(xs, ys, xd, yd, color):
+    r = int(math.sqrt((xd - xs) ** 2 + (yd - ys) ** 2) / 2)
+    pygame.draw.circle(screen, color, (xs, ys), r)
+
+def draw_rect(xs, ys, xd, yd, color):
+    pygame.draw.rect(screen, color, [xs, ys, xd, yd])
+
+def draw_traingle(xs, ys, xd, yd, color):
+    pygame.draw.polygon(screen, color, [(xd - xs, ys), (xs, ys), (xd, yd)])
+
+def draw_square(xs, ys, xd, color):
+    pygame.draw.rect(screen, color, [xs, ys, xd, xd])
+
+def color_change(x):
+    if x == pygame.K_r:        
+        return (255, 0, 0)
+    elif x == pygame.K_g:
+        return (0, 255, 0)
+    elif x == pygame.K_b:
+        return (0, 0, 255)
+    elif x == pygame.K_w:
+        return (255, 255, 255)
+    else:
+        return (0, 0, 0)
+def eraser():
+    screen.fill((0, 0, 0))
+
+done = False
+y = (25, 0, 0)
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1 and event.button != 3:
+                xc, yc = event.pos
+            elif event.button == 3 and event.button != 1:
+                xr, yr = event.pos
+            elif event.button == 2:
+                xt, yt = event.pos
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_s:
+                xs, ys = pygame.mouse.get_pos()
+            if event.key in [pygame.K_r, pygame.K_g, pygame.K_b, pygame.K_w]:
+                y = color_change(event.key)
+                print('color')
+        if event.type == pygame.MOUSEMOTION:
+            if pygame.mouse.get_pressed()[0]:
+                x1, y1 = event.pos
+                draw_circle(xc, yc, x1, y1, y)
+            elif pygame.mouse.get_pressed()[2]:  # Проверяем правую кнопку мыши (кнопка 2)
+                x2, y2 = event.pos
+                draw_rect(xr, yr, x2 - xr, y2 - yr, y)  # Вычисляем ширину и высоту прямоугольника
+            elif pygame.mouse.get_pressed()[1]:
+                x4, y4 = event.pos
+                draw_traingle(xt, yt, x4, y4, y)
+            elif pygame.key.get_pressed()[pygame.K_s]:
+                x5, y5 = event.pos
+                draw_square(xs, ys, x5, y)
+            
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                a, b = event.pos
+                print('stop: ', a, b)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e:
+                eraser()
+    pygame.display.update()
+    clock.tick(240)
+
+pygame.quit()
