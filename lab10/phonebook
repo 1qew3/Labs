@@ -1,0 +1,286 @@
+import psycopg2
+import csv
+from config import host, user, password, db_name
+def add_contact():
+    name = input('Введите имя: ')
+    number = input('Введите номер: ')
+    
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO contacts (contact_name, contact_number) VALUES(
+                %s, %s
+                );
+                """,
+                (name, number)
+            )
+        print('контакт успешно добавлен')
+    except Exception as ex:
+        print("[INFO]   Error while worcking with PostgreSQL", ex)
+    finally:
+        if connection:
+            connection.close()
+            print("[INFO] PostgreSQL connection closed")
+
+def change_number():
+    name = input('Введите имя чей номер хотите изменить: ')
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        new_number = input('Введите новый номер телефона: ')
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE contacts SET contact_number = %s WHERE contact_name = %s;
+                """,
+                (new_number, name)
+            )
+            print('номер успешно изменен')
+    except Exception as ex:
+        print("[INFO]   Error while worcking with PostgreSQL", ex)
+    finally:
+        if connection:
+            connection.close()
+            print("[INFO] PostgreSQL connection closed")
+
+def change_name():
+    number = input('Введите номер человека имя которого хотите изменить: ')
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        new_name = input('Введите новое имя: ')
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE contacts SET contact_name = %s WHERE contact_number = %s;
+                """,
+                (new_name, number)
+            )
+            print('имя успешно изменено')
+    except Exception as ex:
+        print("[INFO]   Error while worcking with PostgreSQL", ex)
+    finally:
+        if connection:
+            connection.close()
+            print("[INFO] PostgreSQL connection closed")
+
+def give_data():
+    a = input("Какие данные хотите получить: \n1)имя \n2)номер \n3)все контакты\n")
+    if a == '1':
+        number = input('Введите номер чье имя хоите узнать: ')
+        try:
+            connection = psycopg2.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=db_name
+            )
+            connection.autocommit = True
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT contact_name FROM contacts WHERE contact_number = %s;
+                    """,
+                    (number,)
+                )
+                sname = cursor.fetchone()
+                print('К этому номеру привязано данное имя: ', sname)
+        except Exception as ex:
+            print("[INFO]   Error while worcking with PostgreSQL", ex)
+        finally:
+            if connection:
+                connection.close()
+                print("[INFO] PostgreSQL connection closed")
+
+    
+    elif a == '2':
+        name = input('введите имя чей номер хотите узнать: ')
+        try:
+            connection = psycopg2.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=db_name
+            )
+            connection.autocommit = True
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT contact_number FROM contacts WHERE contact_name = %s;
+                    """,
+                    (name,)
+                )
+                snum = cursor.fetchone()
+                print('К этому имени привязан данный номер:', snum)
+        except Exception as ex:
+            print("[INFO]   Error while worcking with PostgreSQL", ex)
+        finally:
+            if connection:
+                connection.close()
+                print("[INFO] PostgreSQL connection closed")
+    elif a == '3':
+        try:
+            connection = psycopg2.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=db_name
+            )
+            connection.autocommit = True
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT contact_name, ARRAY_AGG(contact_number) AS all_numbers
+                    FROM contacts 
+                    GROUP BY contact_name;
+                    """
+                )
+                print('Список контактов: ', cursor.fetchall())
+        except Exception as ex:
+            print("[INFO]   Error while worcking with PostgreSQL", ex)
+        finally:
+            if connection:
+                connection.close()
+                print("[INFO] PostgreSQL connection closed")
+
+def delete_data():
+    a = input('Выберите по каким данным удалить:\n1)номер\n2)имя\n')
+    if a == '1':
+        try:
+                num = input('Введите номер: ')
+                connection = psycopg2.connect(
+                    host=host,
+                    user=user,
+                    password=password,
+                    database=db_name
+                )
+                connection.autocommit = True
+
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        DELETE FROM contacts WHERE contact_number = %s;
+                        """,
+                        (num,)
+                    )
+                    print('Контакт успешно удален')
+        except Exception as ex:
+                print("[INFO]   Error while worcking with PostgreSQL", ex)
+        finally:
+            if connection:
+                connection.close()
+                print("[INFO] PostgreSQL connection closed")
+    if a == '2':
+        try:
+                name = input('Введите имя: ')
+                connection = psycopg2.connect(
+                    host=host,
+                    user=user,
+                    password=password,
+                    database=db_name
+                )
+                connection.autocommit = True
+
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        DELETE FROM contacts WHERE contact_name = %s;
+                        """,
+                        (name,)
+                    )
+                    print('Контакт успешно удален')
+        except Exception as ex:
+                print("[INFO]   Error while worcking with PostgreSQL", ex)
+        finally:
+            if connection:
+                connection.close()
+                print("[INFO] PostgreSQL connection closed")
+
+def load_data_from_csv():
+    csv_file = input('Введите путь к csv файлу: ')
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        with open(csv_file, 'r', newline='') as file:
+            csv_reader = csv.reader(file)
+            next(csv_reader) 
+
+            with connection.cursor() as cursor:
+                for row in csv_reader:
+                    contact_name, contact_number = row
+                    cursor.execute(
+                        """
+                        INSERT INTO contacts (contact_name, contact_number)
+                        VALUES (%s, %s);
+                        """,
+                        (contact_name, contact_number)
+                    )
+                    print('Данные из файла успешно загружены')
+    except Exception as ex:
+        print(f"Произошла ошибка при загрузке данных из CSV: {ex}")
+    finally:
+        if connection:
+            connection.close()
+            print("[INFO] PostgreSQL connection closed")
+
+try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE contacts(
+                    id serial PRIMARY KEY,
+                    contact_name varchar(50) NOT NULL,
+                    contact_number varchar(12) NOT NULL
+                );
+                """
+            )
+except Exception as ex:
+    print("[INFO]   Error while worcking with PostgreSQL", ex)
+finally:
+    if connection:
+        connection.close()
+        print("[INFO] PostgreSQL connection closed")
+
+
+add_contact()
+add_contact()
+add_contact()
+give_data()
