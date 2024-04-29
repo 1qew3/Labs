@@ -1,1 +1,341 @@
+import pygame
+import time
+import random
+import json
+import psycopg2
+from config import host, user, password, db_name
 
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load("q.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+name = input('Введите имя профиля: ')
+try:
+    connection = psycopg2.connect(
+        host=host,
+        user=user,
+        password=password,
+        database=db_name
+    )
+    connection.autocommit = True
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT user_name FROM users WHERE user_name = %s;
+            """,
+            (name,)
+        )
+        access = cursor.fetchone()
+        print('1')
+        if not access:
+            score = 0
+            dates = [[300, 300]]
+            snake = Player(300, 300)
+        else:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT user_score FROM users WHERE user_name = %s;
+                    """,
+                    (name, )
+                )
+                score = cursor.fetchone()[0]
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT list_of_pos FROM users WHERE user_name = %s;
+                    """,
+                    (name, )
+                )
+                dates = cursor.fetchone()[0]
+                x, y = dates[0]  
+
+                snake = Player(x, y)
+                print('2')
+
+
+except Exception as ex:
+    print("[INFO]   Error while worcking with PostgreSQL", ex)
+finally:
+    if connection:
+        connection.close()
+        print("[INFO] PostgreSQL connection closed")
+
+
+pygame.init()
+
+screen = pygame.display.set_mode((600, 700))
+pygame.display.set_caption('Snake Game')
+dead_time = pygame.USEREVENT+1
+pygame.time.set_timer(dead_time, 5000)
+clock = pygame.time.Clock()
+food_collected_event = pygame.USEREVENT + 2
+x1, y1 = dates[0]
+snake = Player(x1, y1)
+class Food(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("food.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0,590)
+        self.rect.y = random.randint(0, 690)
+
+def our_snake(snake_list):
+    for x in snake_list:
+        pygame.draw.rect(screen, (0, 0, 0), [x[0], x[1], 10, 10])
+
+def food_time():
+    food = Food()
+    food.rect.x = random.randint(60, 590)
+    food.rect.y = random.randint(0, 690)
+    screen.blit(food.image, food.rect)
+    food.update()
+
+def save_data_to_database():
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+        snake_list_json = json.dumps(snake_List)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT user_name FROM users WHERE user_name = %s;
+                """,
+                (name,)
+            )
+            da = cursor.fetchone()
+            if da:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        UPDATE users SET list_of_pos = %s, user_score = %s, paused = %s, user_speed = %s WHERE user_name = %s;
+                        """,
+                        (snake_list_json, score, True, name, previous_speed)
+                    )
+            else:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        INSERT INTO users (user_name, user_score, list_of_pos, paused, user_speed) VALUES (%s, %s, %s, %s, %s);
+                        """,
+                        (name, score, snake_list_json, True, previous_speed)
+                    )
+    except Exception as ex:
+        print("[INFO]   Error while worcking with PostgreSQL", ex)
+    finally:
+        if connection:
+            connection.close()
+            print("[INFO] PostgreSQL connection closed")   
+
+def save_pause_state_to_database(paused):
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE users SET paused = %s WHERE user_name = %s;
+                """,
+                (paused, name)
+            )
+    except Exception as ex:
+        print("[INFO] Error while working with PostgreSQL", ex)
+    finally:
+        if connection:
+            connection.close()
+
+def get_pause_state_from_database():
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=db_name
+        )
+        connection.autocommit = True
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT paused FROM users WHERE user_name = %s;
+                """,
+                (name,)
+            )
+            paused_state = cursor.fetchone()[0]
+            print('3')
+            if paused_state:
+                pause = True
+                return pause
+            else:
+                return False  # По умолчанию игра не на паузе
+    except Exception as ex:
+        print("[INFO] Error while working with PostgreSQL", ex)
+        return False  # В случае ошибки возвращаем False
+    finally:
+        if connection:
+            connection.close()
+
+
+paused = get_pause_state_from_database()
+print('4')
+
+speed = (score // 4) * 3 + 5
+level = score // 4
+shag = score - (score // 4)
+food = pygame.sprite.Group()
+food.add(Food())
+
+done = False
+previous_speed = speed
+
+font = pygame.font.Font(None, 36)
+
+move_left = False
+move_right = False
+move_up = False
+move_down = False
+
+snake_List = dates
+Length_of_snake = int(score)
+
+while not done:
+    print('5')
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            save_data_to_database()
+            done = True
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                paused = True
+                save_pause_state_to_database(paused)
+            elif event.key == pygame.K_SPACE:
+                print('6')
+                paused = False
+                speed = previous_speed
+                save_pause_state_to_database(paused)
+        if event.type == food_collected_event:
+            pygame.time.set_timer(dead_time, 5000)
+        if event.type == dead_time:
+            food_time()
+            food = pygame.sprite.Group()
+            food.add(Food())
+    if not paused:
+        if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    move_left = True
+                    move_right = False
+                    move_up = False
+                    move_down = False
+                if event.key == pygame.K_RIGHT:
+                    move_right = True
+                    move_up = False
+                    move_down = False
+                    move_left = False
+                if event.key == pygame.K_UP:
+                    move_up = True
+                    move_left = False
+                    move_right = False
+                    move_down = False
+                if event.key == pygame.K_DOWN:
+                    move_down = True
+                    move_left = False
+                    move_right = False
+                    move_up = False 
+        if move_left:
+            snake.rect.x -= speed
+        if move_right:
+            snake.rect.x += speed
+        if move_up:
+            snake.rect.y -= speed
+        if move_down:
+            snake.rect.y += speed
+
+    
+        snake_Head = []
+        snake_Head.append(snake.rect.x)
+        snake_Head.append(snake.rect.y)
+        snake_List.append(snake_Head)
+        if len(snake_List) > Length_of_snake:
+            del snake_List[0]
+
+        if snake.rect.x >= 600 or snake.rect.x < 0 or snake.rect.y >= 700 or snake.rect.y < 53:
+            try:
+                connection = psycopg2.connect(
+                    host=host,
+                    user=user,
+                    password=password,
+                    database=db_name
+                )
+                connection.autocommit = True
+
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        DELETE FROM users WHERE user_name = %s;
+                        """,
+                        (name,)
+                    )
+            except Exception as ex:
+                print("[INFO] Error while working with PostgreSQL", ex)
+            finally:
+                if connection:
+                    connection.close()
+            print('столкновение')
+            done = True
+
+
+        pygame.draw.rect(screen, (0, 0, 0), [0, 53, 700, 5])
+        pygame.display.update()
+        screen.fill((255, 255, 255))
+        for co in food:
+            collected_coins = pygame.sprite.spritecollide(snake, food, False)
+            if collected_coins:
+                chance = [1, 1, 1, 1, 1, 2, 2, 2, 3, 3]
+                weight = random.choices(chance)[0]
+                score += weight
+                shag += weight
+                pygame.event.post(pygame.event.Event(food_collected_event))
+                co.rect.x = random.randint(60, 590)
+                co.rect.y = random.randint(0, 690)
+                if shag >= 4:
+                    speed += 5
+                    level += 1
+                    shag = 0
+                    print(score)
+                Length_of_snake += weight
+        for x in snake_List[:-1]:
+            if x == snake_Head:
+                done = True
+        screen.blit(snake.image, snake.rect)
+        food.draw(screen)
+        food.update()
+        clock.tick(30)
+        our_snake(snake_List)
+        text_surface = font.render("Score:", True, (0, 0, 0))
+        screen.blit(text_surface, (5, 5))
+        text_surface1 = font.render("Level:", True, (0, 0, 0))
+        screen.blit(text_surface1, (5, 30))
+        pygame.display.flip()
+        text_score = font.render(''.join(str(score)), True, (0, 0, 0))
+        screen.blit(text_score, (100, 5))
+        text_level = font.render(''.join(str(level)), True, (0, 0, 0))
+        screen.blit(text_level, (80, 30))
+        pygame.display.flip()
+print('8')
+pygame.quit()
